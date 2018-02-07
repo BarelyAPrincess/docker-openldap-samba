@@ -1,5 +1,5 @@
-NAME = osixia/openldap
-VERSION = 1.1.11
+NAME = theameliadewitt/openldap-samba
+VERSION = 1.0.0
 
 .PHONY: build build-nocache test tag-latest push push-latest release git-tag-version
 

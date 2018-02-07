@@ -1,4 +1,4 @@
-# osixia/openldap
+# theameliadewitt/openldap-samba
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/osixia/openldap.svg)
 ![Docker Stars](https://img.shields.io/docker/stars/osixia/openldap.svg)
@@ -118,6 +118,18 @@ For more information about docker data volume, please refer to:
 #### Edit your server configuration
 
 Do not edit slapd.conf it's not used. To modify your server configuration use ldap utils: **ldapmodify / ldapadd / ldapdelete**
+
+#### smbldap-tools
+
+The smbldap-tools are included to provide easy administration of the LDAP database for use with a samba installation. By default, the database is populated during the bootstrap process - if you'd wish to disable this step, set the environment `LDAP_NOPRELOAD` to `false`. However, smdldap-tools will still remain configured for use as follows:
+
+ * Add Samba User:
+
+	docker exec -t -i ${container_id} /usr/sbin/smbldap-useradd -u ${uid} -S ${lastname} -N ${firstname} -M ${email} -A 1 ${commonname}
+
+ * And so many more:
+
+[[man smbldap-tools]https://www.mankier.com/package/smbldap-tools]
 
 #### Seed ldap database with ldif
 

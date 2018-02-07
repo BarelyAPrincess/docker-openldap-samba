@@ -1,7 +1,7 @@
 # Use osixia/light-baseimage
 # sources: https://github.com/osixia/docker-light-baseimage
 FROM osixia/light-baseimage:1.1.1
-MAINTAINER Bertrand Gouny <bertrand.gouny@osixia.net>
+MAINTAINER Amelia DeWitt <theameliadewitt@gmail.com>
 
 ARG LDAP_OPENLDAP_GID
 ARG LDAP_OPENLDAP_UID
@@ -27,11 +27,15 @@ RUN echo "path-include /usr/share/doc/krb5*" >> /etc/dpkg/dpkg.cfg.d/docker && a
        openssl \
        slapd \
        krb5-kdc-ldap \
+       smbldap-tools \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Add service directory to /container/service
 ADD service /container/service
+
+# Add base smbldap-tools and samba configs
+ADD etc /etc
 
 # Use baseimage install-service script
 # https://github.com/osixia/docker-light-baseimage/blob/stable/image/tool/install-service

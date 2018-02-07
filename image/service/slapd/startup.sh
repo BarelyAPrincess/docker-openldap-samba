@@ -53,6 +53,13 @@ if [ ! -e "$FIRST_START_DONE" ]; then
 
   }
 
+  function get_samba_domain() {
+    if [-z "$SAMBA_DOMAIN"]; then
+      IFS='.' read -ra SAMBA_DOMAIN_TABLE <<< "$LDAP_DOMAIN"
+      SAMBA_DOMAIN=$(echo ${SAMBA_DOMAIN_TABLE[0]} | awk '{print toupper($0)}')
+    fi
+  }
+
   function is_new_schema() {
     local COUNT=$(ldapsearch -Q -Y EXTERNAL -H ldapi:/// -b cn=schema,cn=config cn | grep -c $1)
     if [ "$COUNT" -eq 0 ]; then
@@ -261,6 +268,24 @@ EOF
       for f in $(find ${CONTAINER_SERVICE_DIR}/slapd/assets/config/bootstrap/ldif/custom -type f -name \*.ldif  | sort); do
         ldap_add_or_modify "$f"
       done
+
+      # Update smbldap-populate with our own version that allows the root password to be specified from STDIN
+      rm /usr/sbin/smbldap-populate
+      mv /etc/smbldap-tools/smbldap-populate /usr/sbin/smbldap-populate
+      chmod +x /usr/sbin/smbldap-populate
+
+      get_samba_domain
+
+      # TODO Convert all local varibles to global, so scripts can use the entire range of available env strings.
+      # Update configuration values for smbldap-tools and the fake samba conf
+      SAMBA_DOMAIN=$SAMBA_DOMAIN LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < \etc\samba\smb.conf > /etc/samba/smb2.conf
+      LDAP_ADMIN_PASSWORD=$LDAP_ADMIN_PASSWORD LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < smbldap_bind.conf > smbldap_bind.conf
+      SAMBA_DOMAIN=$SAMBA_DOMAIN SAMBA_SID=$SAMBA_SID LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < smbldap.conf > smbldap.conf
+
+      # Preload LDAP with Samba Directory using smbldap-tools
+      if [ "${LDAP_NOPRELOAD,,}" == "false" ]; then
+        echo ${LDAP_ADMIN_PASSWORD} | /usr/sbin/smbldap-populate -p
+      fi
 
     fi
 
