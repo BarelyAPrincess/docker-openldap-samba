@@ -155,7 +155,7 @@ EOF
   log-helper info "Configuring smbldap-tools..."
 
   # Update smbldap-populate with our own version that allows the root password to be specified from STDIN
-  rm /usr/sbin/smbldap-populate
+  rm /usr/sbin/smbldap-populate || true
   mv /etc/smbldap-tools/smbldap-populate /usr/sbin/smbldap-populate
   chmod +x /usr/sbin/smbldap-populate
 
