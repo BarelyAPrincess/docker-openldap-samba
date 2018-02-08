@@ -54,7 +54,7 @@ if [ ! -e "$FIRST_START_DONE" ]; then
   }
 
   function get_samba_domain() {
-    if [-z "$SAMBA_DOMAIN"]; then
+    if [ -z "$SAMBA_DOMAIN" ]; then
       IFS='.' read -ra SAMBA_DOMAIN_TABLE <<< "$LDAP_DOMAIN"
       SAMBA_DOMAIN=$(echo ${SAMBA_DOMAIN_TABLE[0]} | awk '{print toupper($0)}')
     fi
@@ -158,9 +158,9 @@ EOF
 
   # TODO Convert all local varibles to global, so scripts can use the entire range of available env strings.
   # Update configuration values for smbldap-tools and the fake samba conf
-  SAMBA_DOMAIN=$SAMBA_DOMAIN LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/samba/smb.conf > /etc/samba/smb2.conf
-  LDAP_ADMIN_PASSWORD=$LDAP_ADMIN_PASSWORD LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/samba/smbldap_bind.conf > /etc/samba/smbldap_bind.conf
-  SAMBA_DOMAIN=$SAMBA_DOMAIN SAMBA_SID=$SAMBA_SID LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/samba/smbldap.conf > /etc/samba/smbldap.conf
+  SAMBA_DOMAIN=$SAMBA_DOMAIN LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/samba/smb.conf > /etc/samba/smb.conf
+  LDAP_ADMIN_PASSWORD=$LDAP_ADMIN_PASSWORD LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/smbldap-tools/smbldap_bind.conf > /etc/smbldap-tools/smbldap_bind.conf
+  SAMBA_DOMAIN=$SAMBA_DOMAIN SAMBA_SID=$SAMBA_SID LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/smbldap-tools/smbldap.conf > /etc/smbldap-tools/smbldap.conf
 
   if [ "${KEEP_EXISTING_CONFIG,,}" == "true" ]; then
     log-helper info "/!\ KEEP_EXISTING_CONFIG = true configration will not be updated"
