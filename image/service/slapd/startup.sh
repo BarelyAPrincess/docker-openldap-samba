@@ -154,13 +154,14 @@ EOF
 
   log-helper info "Configuring smbldap-tools..."
 
+  get_ldap_base_dn
   get_samba_domain
 
   # TODO Convert all local varibles to global, so scripts can use the entire range of available env strings.
   # Update configuration values for smbldap-tools and the fake samba conf
-  SAMBA_DOMAIN=$SAMBA_DOMAIN LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/samba/smb.conf > /etc/samba/smb.conf
-  LDAP_ADMIN_PASSWORD=$LDAP_ADMIN_PASSWORD LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/smbldap-tools/smbldap_bind.conf > /etc/smbldap-tools/smbldap_bind.conf
-  SAMBA_DOMAIN=$SAMBA_DOMAIN SAMBA_SID=$SAMBA_SID LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/smbldap-tools/smbldap.conf > /etc/smbldap-tools/smbldap.conf
+  SAMBA_DOMAIN=$SAMBA_DOMAIN LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/samba/smb.conf.tmpl > /etc/samba/smb.conf
+  LDAP_ADMIN_PASSWORD=$LDAP_ADMIN_PASSWORD LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/smbldap-tools/smbldap_bind.conf.tmpl > /etc/smbldap-tools/smbldap_bind.conf
+  SAMBA_DOMAIN=$SAMBA_DOMAIN SAMBA_SID=$SAMBA_SID LDAP_BASE_DN=$LDAP_BASE_DN perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' < /etc/smbldap-tools/smbldap.conf.tmpl > /etc/smbldap-tools/smbldap.conf
 
   if [ "${KEEP_EXISTING_CONFIG,,}" == "true" ]; then
     log-helper info "/!\ KEEP_EXISTING_CONFIG = true configration will not be updated"
@@ -224,10 +225,12 @@ EOF
     #
     if $BOOTSTRAP; then
 
-      log-helper info "Add bootstrap schemas..."
+      log-helper info "Add ppolicy schema..."
 
       # add ppolicy schema
       ldapadd -c -Y EXTERNAL -Q -H ldapi:/// -f /etc/ldap/schema/ppolicy.ldif 2>&1 | log-helper debug
+
+      log-helper info "Add bootstrap schemas..."
 
       # convert schemas to ldif
       SCHEMAS=""
@@ -236,18 +239,22 @@ EOF
       done
       ${CONTAINER_SERVICE_DIR}/slapd/assets/schema-to-ldif.sh "$SCHEMAS"
 
+      log-helper info "Step 2..."
+
       # add converted schemas
       for f in $(find ${CONTAINER_SERVICE_DIR}/slapd/assets/config/bootstrap/schema -name \*.ldif -type f|sort); do
-        log-helper debug "Processing file ${f}"
         # add schema if not already exists
         SCHEMA=$(basename "${f}" .ldif)
         ADD_SCHEMA=$(is_new_schema $SCHEMA)
         if [ "$ADD_SCHEMA" -eq 1 ]; then
-          ldapadd -c -Y EXTERNAL -Q -H ldapi:/// -f $f 2>&1 | log-helper debug
+          cat $f | LDAP_BACKEND=$LDAP_BACKEND perl -pe 's/\$([_A-Z]+)/$ENV{$1}/g' | ldapadd -c -Y EXTERNAL -Q -H ldapi:/// 2>&1 | log-helper debug
+          log-helper info "schema ${f} succceded"
         else
           log-helper info "schema ${f} already exists"
         fi
       done
+
+      log-helper info "Step 3..."
 
       # set config password
       LDAP_CONFIG_PASSWORD_ENCRYPTED=$(slappasswd -s $LDAP_CONFIG_PASSWORD)

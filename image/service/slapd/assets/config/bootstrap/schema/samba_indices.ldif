@@ -1,24 +1,4 @@
-# TODO Should we detect the backend?
-
-# Modify MDB Backend
-dn: olcDatabase={1}mdb,cn=config
-changetype: modify
-replace: olcDbIndex
-olcDbIndex: objectClass eq
-olcDbIndex: uidNumber,gidNumber eq
-olcDbIndex: loginShell eq
-olcDbIndex: uid,cn eq,sub
-olcDbIndex: memberUid eq,sub
-olcDbIndex: member,uniqueMember eq
-olcDbIndex: sambaSID eq
-olcDbIndex: sambaPrimaryGroupSID eq
-olcDbIndex: sambaGroupType eq
-olcDbIndex: sambaSIDList eq
-olcDbIndex: sambaDomainName eq
-olcDbIndex: default sub,eq
-
-# Modify HDB Backend
-dn: olcDatabase={1}hdb,cn=config
+dn: olcDatabase={1}$LDAP_BACKEND,cn=config
 changetype: modify
 replace: olcDbIndex
 olcDbIndex: objectClass eq
