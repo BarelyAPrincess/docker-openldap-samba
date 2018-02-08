@@ -36,6 +36,7 @@ ADD service /container/service
 
 # Add base smbldap-tools and samba configs
 ADD etc /etc
+ADD usr/sbin /usr/sbin
 
 # Use baseimage install-service script
 # https://github.com/osixia/docker-light-baseimage/blob/stable/image/tool/install-service

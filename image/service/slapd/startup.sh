@@ -154,11 +154,6 @@ EOF
 
   log-helper info "Configuring smbldap-tools..."
 
-  # Update smbldap-populate with our own version that allows the root password to be specified from STDIN
-  rm /usr/sbin/smbldap-populate || true
-  mv /etc/smbldap-tools/smbldap-populate /usr/sbin/smbldap-populate
-  chmod +x /usr/sbin/smbldap-populate
-
   get_samba_domain
 
   # TODO Convert all local varibles to global, so scripts can use the entire range of available env strings.
